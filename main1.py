@@ -45,6 +45,7 @@ class MainApp(QMainWindow, FORM_CLASS):
         
         self.title = "Image Filters"
         self.setWindowTitle(self.title)
+        self.setWindowIcon(QIcon("images/icons/wizard.png"))
         self.mode=False
         self.spatialChecked.toggled.connect(self.change_mode)
         self.frequencyChecked.toggled.connect(self.change_mode)
@@ -54,6 +55,7 @@ class MainApp(QMainWindow, FORM_CLASS):
         # self.originHistoLabel.setPixmap(pixmap2)
         # self.lowPassButton.clicked.connect( self.lowPass)
         self.browse_photo.triggered.connect(self.browse)
+        self.actionClear_All.triggered.connect(self.clear_frames)
         self.low_pushButton.clicked.connect(lambda:self.multiple_filters(0))
         self.high_pushButton.clicked.connect(lambda:self.multiple_filters(1))
         self.median_pushButton.clicked.connect(lambda:self.multiple_filters(2))
@@ -61,14 +63,15 @@ class MainApp(QMainWindow, FORM_CLASS):
         # self.showHisto.clicked.connect(self.HistoGram)
         self.Equalize_Button.clicked.connect(self.hist_equal)
     def browse(self):
-        self.file_path_name, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Open file', " ", "(*.jpg)")
+        self.file_path_name, _ = QtWidgets.QFileDialog.getOpenFileName(
+            self, 'Open file', " ", "JPG Files (*.jpg; *.jpeg);; PNG Fiels (*.png);; BMP Files (*.bmp);; All Files (*)")
         self.clear_frames()
         self.origin_image = cv2.imread(self.file_path_name,0)
         self.original_img_label.setPixmap(QPixmap(self.file_path_name))
         self.HistoGram()
         self.convert_to_freq_domain()
             
-    ######## Clears all labels and graphViews####### 
+    ######## Clears all labels and graphicsViews####### 
     
     def clear_frames(self):
         labels = [self.origin_Histo_Label, self.equalized_histo_label,
@@ -186,6 +189,7 @@ class MainApp(QMainWindow, FORM_CLASS):
         else:
             # print('lapll')
             self.filtered_img = ndimage.laplace(self.origin_image)
+            print(self.filtered_img.shape)
         self.show_after_edit()
         self.fourier_after()
     def show_after_edit(self):
@@ -372,7 +376,29 @@ def main():
             border: 1px solid #fff;
             padding: 4px 10px;
             border-radius:  4px;
-            
+            }
+        QMenuBar{
+            /* background: #262D37; */
+            }
+        QMenuBar{
+            /* border: 1px solid #fff;
+            padding: 4px 10px;
+            */
+            border-radius: 4px;
+            }
+        QMenuBar::item::selected{
+            background: #4b596b;
+            color: #fff;
+            }
+        QMenu::item{
+            /* background: #3b444f;
+            border: 1px #C6C6C6 solid;
+            border-radius: 4px; */
+            }
+        QMenu::item::selected
+            {
+            background: #4b596b;
+            color: #fff;
             }
     """
     app.setStyleSheet(style)
