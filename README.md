@@ -9,7 +9,7 @@ Mariam Boghdady |
 Mariam Mahmoud | 
 Mohamed Osama | osama51
 
-``` all credit goes to filo, mariam & mariam ```
+> *all credit goes to filo, mariam & mariam*
 __________________
 ## Abstract 
 A simple python application with gui that utilizes various built-from-scratch filters to edit any desired photo and displays the output in gray scale. The filters used are divided into two categories that can be switched between easily using radio buttons; spatial domain and frequency domain filters.
@@ -31,7 +31,7 @@ First screen is composed of the filters options along with four labels to displa
 
 * Laplacian Filter (spatial domain)
 <p align="center"><br>
-    <img src="images/samples/sample03.jpg" width="500" height="400"/>
+    <img src="images/samples/sample03-fix.jpg" width="500" height="400"/>
 </P>
 
 * Low Pass Filter (frequency domain)
