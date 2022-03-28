@@ -188,7 +188,9 @@ class MainApp(QMainWindow, FORM_CLASS):
             self.filtered_img=filtered_img[0:x-2,0:y-2]
         else:
             # print('lapll')
-            self.filtered_img = ndimage.laplace(self.origin_image)
+            self.filtered_img = cv2.Laplacian(self.origin_image, cv2.CV_16S, ksize=3)
+            self.filtered_img = cv2.convertScaleAbs(self.filtered_img)
+            # self.filtered_img = ndimage.laplace(self.origin_image)
             print(self.filtered_img.shape)
         self.show_after_edit()
         self.fourier_after()
