@@ -181,12 +181,18 @@ class MainApp(QMainWindow, FORM_CLASS):
             j=1
             # print(np.sum(np.multiply(img[i-1:i+2,j-1:j+2],medianier)),img[i-1:i+2,j-1:j+2],medianier)
             filtered_img=np.full((x,y),255)
-            for i in range(1,x-1):
-                for j in range(1,y-1):
-                    # print(i,j)
-                    filtered_img[i-1,j-1]=np.sum(np.multiply(self.origin_image[i-1:i+2,j-1:j+2],applied_filter))
+            if filter_type<2:
+                for i in range(1,x-1):
+                    for j in range(1,y-1):
+                        # print(i,j)
+                            filtered_img[i-1,j-1]=np.sum(np.multiply(self.origin_image[i-1:i+2,j-1:j+2],applied_filter))
+            else:
+                for i in range(1,x-1):
+                    for j in range(1,y-1):
+                        filtered_img[i-1,j-1]=np.median(self.origin_image[i-1:i+2,j-1:j+2])
             self.filtered_img=filtered_img[0:x-2,0:y-2]
         else:
+
             # print('lapll')
             self.filtered_img = cv2.Laplacian(self.origin_image, cv2.CV_16S, ksize=3)
             self.filtered_img = cv2.convertScaleAbs(self.filtered_img)
