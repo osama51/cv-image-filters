@@ -1,14 +1,11 @@
+import os
+import cv2
 import sys
+import time
 import threading
 import numpy as np
 from os import path
-import os
 import matplotlib.pyplot as plt
-import numpy as np
-# import pandas as pd
-from PyQt5 import QtWidgets
-import matplotlib.pyplot as plt
-import time
 from PyQt5.uic import loadUiType
 from PyQt5 import QtCore, QtGui
 from scipy.fft import fft, fftfreq, rfft, rfftfreq
@@ -16,20 +13,14 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.uic import loadUiType
 from PyQt5.QtCore import QTimer
-from os import path
 from scipy import ndimage
 import pyqtgraph as pg
-import cv2
 from matplotlib import pyplot as plt
 # from Design import Ui_MainWindow
 # from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtGui import QPixmap
 from PIL import Image, ImageQt
-import time
-
-
 
 
 # img = cv2.imread('kastor.jpeg',0)
@@ -61,7 +52,7 @@ class MainApp(QMainWindow, FORM_CLASS):
         self.median_pushButton.clicked.connect(lambda:self.multiple_filters(2))
         self.laplace_pushButton.clicked.connect(lambda:self.multiple_filters(3))
         # self.showHisto.clicked.connect(self.HistoGram)
-        self.Equalize_Button.clicked.connect(self.hist_equal)
+        self.Equalize_Button.clicked.connect(self.hist_equal_os)
     def browse(self):
         self.file_path_name, _ = QtWidgets.QFileDialog.getOpenFileName(
             self, 'Open file', " ", "JPG Files (*.jpg; *.jpeg);; PNG Fiels (*.png);; BMP Files (*.bmp);; All Files (*)")
@@ -290,19 +281,35 @@ class MainApp(QMainWindow, FORM_CLASS):
         
     def hist_equal_os(self):
         img_gray = cv2.imread(self.file_path_name, cv2.IMREAD_GRAYSCALE)
-        unique2, count2 = np.unique(img_gray, return_counts=True)
-        c_sum = np.cumsum(count2)
-        N = c_sum.max() - c_sum.min()
-        n = c_sum - c_sum.min()
-        n *= 255 
-        s = n/N
-        s = s.astype('uint8')
-        img_flat = img_gray.flatten()
-        new_img = np.full(len(img_flat), 0)
+        unique2, count2 = np.unique(img_gray, return_counts=True) #misses values with 0 pixels
+        # print(unique2)
+        # plt.bar(unique2, count2)
+        count_full = np.full(256, 0)
+        count_full[:len(count2)] += count2
+        w,h = img_gray.shape
+        img_size = w*h
         
+        img_flat = img_gray.flatten()
+        count_full = np.zeros(256)
+        
+        for i in range (1,img_size): # replaces unique (from wael)
+            count_full[img_flat[i]] += 1
+
+        P = count_full/img_size
+        c_sum = np.cumsum(P)
+        c_sum *= 255
+        plt.plot(c_sum)
+        c_sum = np.round(c_sum)
+        # N = c_sum.max() - c_sum.min()
+        # n = c_sum - c_sum.min()
+        # n *= 255 
+        # s = n/N
+        # s = s.astype('uint8')
+        new_img = np.full(len(img_flat), 0)
+        # new_img = np.zeros_like(img_flat)
         
         img_flat = np.array(img_flat)
-        for hist_index, hist_value in enumerate(s):
+        for hist_index, hist_value in enumerate(c_sum):
                 new_img[img_flat == hist_index] = hist_value
                     
         # for index, value in enumerate(img_flat):
@@ -310,18 +317,19 @@ class MainApp(QMainWindow, FORM_CLASS):
         #         if value == hist_index:
         #             new_img[index] = hist_value
                     
-                    
         new_img = np.reshape(new_img, img_gray.shape)
+        
         unique_new, count_new = np.unique(new_img, return_counts=True)
         self.equalized_histo_label.plotItem.clearPlots()
         self.equalized_histo_label.plot(unique_new, count_new, pen='c')
-        
         cv2.imwrite('EqualizedImage.jpg', new_img)
         HistoOutput = QPixmap('EqualizedImage.jpg')
         HistoOutput.scaledToHeight(self.equalized_img_Histo_Label.height())
         HistoOutput.scaledToWidth(self.equalized_img_Histo_Label.width())
         self.equalized_img_Histo_Label.setPixmap(HistoOutput)
         
+        # cv2.imshow("new image",new_img)
+        # cv2.waitKey(0)
 
     
 def main():
