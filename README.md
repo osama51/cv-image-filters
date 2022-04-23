@@ -51,7 +51,8 @@ First screen is composed of the filters options along with four labels to displa
 
 <p align="center"><br>
     <img src="images/samples/sample04.jpg" width="500" height="400"/><br><br>
-    <img src="images/samples/sample04-2.jpg" width="500" height="400"/><br>
+    <img src="images/samples/sample04-2.jpg" width="500" height="400"/><br><br>
+    <img src="images/samples/sample04-3.jpg" width="500" height="400"/><br>
 </P>
 
 ## Deeper Insight
