@@ -1,6 +1,6 @@
 # Image Filters
 
-## Contributers
+## Contributors
 
 Name | Github
 ------|----------
