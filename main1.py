@@ -1,5 +1,6 @@
 import os
 import cv2
+import cv2 as cv
 import sys
 import time
 import threading
@@ -30,10 +31,13 @@ FORM_CLASS,_ = loadUiType(path.join(path.dirname(__file__), "Task1_1.ui"))
 class MainApp(QMainWindow, FORM_CLASS):
     def __init__(self , parent=None):
         pg.setConfigOption('background', (25,25,35))
+        # pg.setConfigOption('foreground', (255,215,0))
         super(MainApp,self).__init__(parent)
         QMainWindow.__init__(self)
         self.setupUi(self)
         
+        if not os.path.exists('cache'):
+            os.makedirs('cache')
         self.title = "Image Filters"
         self.setWindowTitle(self.title)
         self.setWindowIcon(QIcon("images/icons/wizard.png"))
@@ -53,19 +57,24 @@ class MainApp(QMainWindow, FORM_CLASS):
         self.laplace_pushButton.clicked.connect(lambda:self.multiple_filters(3))
         # self.showHisto.clicked.connect(self.HistoGram)
         self.Equalize_Button.clicked.connect(self.hist_equal_os)
+        
     def browse(self):
         self.file_path_name, _ = QtWidgets.QFileDialog.getOpenFileName(
             self, 'Open file', " ", "JPG Files (*.jpg; *.jpeg);; PNG Fiels (*.png);; BMP Files (*.bmp);; All Files (*)")
         self.clear_frames()
         self.origin_image = cv2.imread(self.file_path_name,0)
+        self.origin_image_bgr = cv2.imread(self.file_path_name)
+        self.origin_image_rgb = cv2.cvtColor(self.origin_image_bgr, cv2.COLOR_BGR2RGB)
         self.original_img_label.setPixmap(QPixmap(self.file_path_name))
+        cv.imwrite('cache/origin_gray.jpg', self.origin_image)
+        self.origin_gray_pixmap =QPixmap('cache/origin_gray.jpg')
         self.HistoGram()
         self.convert_to_freq_domain()
             
     ######## Clears all labels and graphicsViews####### 
     
     def clear_frames(self):
-        labels = [self.origin_Histo_Label, self.equalized_histo_label,
+        labels = [self.origin_histo_graph, self.equalized_histo_graph,
                   self.origin_img_Histo_Label, self.equalized_img_Histo_Label, 
                   self.original_img_label, self.filtered_img_label,
                   self.origin_fourier_label, self.filtered_fourier_label]
@@ -88,8 +97,8 @@ class MainApp(QMainWindow, FORM_CLASS):
         dft = cv2.dft(np.float32(self.origin_image),flags = cv2.DFT_COMPLEX_OUTPUT)
         self.dft_shift = np.fft.fftshift(dft)
         self.magnitude_spectrum = 20*np.log(cv2.magnitude(self.dft_shift[:,:,0],self.dft_shift[:,:,1]))
-        cv2.imwrite('original_fourier.jpg',self.magnitude_spectrum)
-        self.origin_fourier_label.setPixmap(QPixmap('original_fourier.jpg'))
+        cv2.imwrite('cache/original_fourier.jpg',self.magnitude_spectrum)
+        self.origin_fourier_label.setPixmap(QPixmap('cache/original_fourier.jpg'))
 
     def low_high_Pass_freq(self,type):
         rows, cols = self.origin_image.shape
@@ -149,7 +158,11 @@ class MainApp(QMainWindow, FORM_CLASS):
         # lowSpatialImage.save('lowSpatial.png')
         self.show_after_edit()
         self.fourier_after()
+        
     def multiple_filters(self,filter_type):
+        self.filter_type = filter_type
+        self.original_img_label_2.setPixmap(QPixmap(self.file_path_name))
+        self.Picking_Image_Spatial()
         if self.mode:
             self.low_high_Pass_freq(filter_type)
         elif filter_type<3:
@@ -195,25 +208,30 @@ class MainApp(QMainWindow, FORM_CLASS):
         # medianImage = Image.fromarray(self.filtered_img)
         # medianImage.save('medianFilter.jpg')
         # print('ana b5rg sora')
-        plt.imsave('editedImage.jpg', self.filtered_img,cmap='gray')
+        plt.imsave('cache/editedImage.jpg', self.filtered_img,cmap='gray')
         # medianOutput = QPixmap('medianFilter.jpg')
-        self.filtered_img_label.setPixmap(QPixmap('editedImage.jpg'))
+        self.filtered_img_label.setPixmap(QPixmap('cache/editedImage.jpg'))
     def fourier_after(self):
         dft_filtered = cv2.dft(np.float32(self.filtered_img),flags = cv2.DFT_COMPLEX_OUTPUT)
         self.dft_shift_filtered = np.fft.fftshift(dft_filtered)
         self.magnitude_spectrum_filtered = 20*np.log(cv2.magnitude(self.dft_shift_filtered[:,:,0],self.dft_shift_filtered[:,:,1]))
-        plt.imsave('filtered_fourier.jpg',self.magnitude_spectrum_filtered,cmap='gray')
-        self.filtered_fourier_label.setPixmap(QPixmap('filtered_fourier.jpg'))
+        plt.imsave('cache/filtered_fourier.jpg',self.magnitude_spectrum_filtered,cmap='gray')
+        self.filtered_fourier_label.setPixmap(QPixmap('cache/filtered_fourier.jpg'))
 
     def HistoGram(self):
         self.unique_elements,self.indices, self.counts_elements = np.unique(self.origin_image,return_inverse=True , return_counts=True)
-        self.origin_Histo_Label.plotItem.clearPlots()
-        self.origin_Histo_Label.plot(self.unique_elements,self.counts_elements, pen='c')
-        origin_image_pixmap =QPixmap(self.file_path_name)
-        origin_image_pixmap.scaledToHeight(self.origin_img_Histo_Label.height())
+        self.origin_histo_graph.plotItem.clearPlots()
+        self.origin_histo_graph.plot(self.unique_elements,self.counts_elements, pen='c')
+        self.origin_image_pixmap =QPixmap(self.file_path_name)
+        self.origin_image_pixmap.scaledToHeight(self.origin_img_Histo_Label.height())
         # print('height label', self.origin_img_Histo_Label.height())
-        origin_image_pixmap.scaledToWidth(self.origin_img_Histo_Label.width())
-        self.origin_img_Histo_Label.setPixmap(origin_image_pixmap)
+        self.origin_image_pixmap.scaledToWidth(self.origin_img_Histo_Label.width())
+        if (self.checkBox_colored.isChecked()):
+            self.origin_img_Histo_Label.setPixmap(self.origin_image_pixmap)
+        else:
+            self.origin_img_Histo_Label.setPixmap(self.origin_gray_pixmap)
+            
+            
         # self.origin_img_Histo_Label.setPixmap.loadFromData(self.origin_image)
 
         # print(unique_elements, counts_elements)
@@ -244,8 +262,8 @@ class MainApp(QMainWindow, FORM_CLASS):
         # print(cdf)
         Sk=255*cdf
         new_points=np.around(Sk)
-        self.equalized_histo_label.plotItem.clearPlots()
-        self.equalized_histo_label.plot(new_points,self.counts_elements, pen='c')
+        self.equalized_histo_graph.plotItem.clearPlots()
+        self.equalized_histo_graph.plot(new_points,self.counts_elements, pen='c')
         # plt.plot(new_points)
         # print(len(unique_elements_1) ,len(cdf),new_points)
         
@@ -266,14 +284,14 @@ class MainApp(QMainWindow, FORM_CLASS):
         new_histoImage=np.reshape(new_histoImage,self.origin_image.shape)
         
         # unique2, count2 = np.unique(new_histoImage, return_counts=True)
-        # self.equalized_histo_label.plotItem.clearPlots()
-        # self.equalized_histo_label.plot(count2, pen='c')
+        # self.equalized_histo_graph.plotItem.clearPlots()
+        # self.equalized_histo_graph.plot(count2, pen='c')
         
         # print(new_histoImage.shape)
         # histoGramImage = Image.fromarray(new_histoImage)
         # new_histoImage.save('EqualizedImage.jpg')
-        cv2.imwrite('EqualizedImage.jpg', new_histoImage)
-        HistoOutput = QPixmap('EqualizedImage.jpg')
+        cv2.imwrite('cache/EqualizedImage.jpg', new_histoImage)
+        HistoOutput = QPixmap('cache/EqualizedImage.jpg')
         HistoOutput.scaledToHeight(self.equalized_img_Histo_Label.height())
         HistoOutput.scaledToWidth(self.equalized_img_Histo_Label.width())
         self.equalized_img_Histo_Label.setPixmap(HistoOutput)
@@ -281,6 +299,16 @@ class MainApp(QMainWindow, FORM_CLASS):
         
     def hist_equal_os(self):
         img_gray = cv2.imread(self.file_path_name, cv2.IMREAD_GRAYSCALE)
+        
+        # img = cv2.imread(self.file_path_name)
+        # hsv = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
+        # hsvrgb = cv2.cvtColor(img, cv2.COLOR_HSV2RGB)
+        # img_gray = hsv[::2]
+        
+        # cv2.imshow('Original image',img)
+        # cv2.imshow('HSV image', hsv)
+        # cv2.imshow('FromHSVtoRGB image', hsvrgb)
+        
         unique2, count2 = np.unique(img_gray, return_counts=True) #misses values with 0 pixels
         # print(unique2)
         # plt.bar(unique2, count2)
@@ -292,7 +320,7 @@ class MainApp(QMainWindow, FORM_CLASS):
         img_flat = img_gray.flatten()
         count_full = np.zeros(256)
         
-        for i in range (1,img_size): # replaces unique (from wael)
+        for i in range (1,img_size): 
             count_full[img_flat[i]] += 1
 
         P = count_full/img_size
@@ -318,18 +346,115 @@ class MainApp(QMainWindow, FORM_CLASS):
         #             new_img[index] = hist_value
                     
         new_img = np.reshape(new_img, img_gray.shape)
-        
         unique_new, count_new = np.unique(new_img, return_counts=True)
-        self.equalized_histo_label.plotItem.clearPlots()
-        self.equalized_histo_label.plot(unique_new, count_new, pen='c')
-        cv2.imwrite('EqualizedImage.jpg', new_img)
-        HistoOutput = QPixmap('EqualizedImage.jpg')
-        HistoOutput.scaledToHeight(self.equalized_img_Histo_Label.height())
-        HistoOutput.scaledToWidth(self.equalized_img_Histo_Label.width())
+        
+        ################ Colored Histogram #################
+        if(self.checkBox_colored.isChecked()):
+            self.origin_img_Histo_Label.setPixmap(self.origin_image_pixmap)
+            # normalized_intens = new_img / 255
+            bgr = cv2.imread(self.file_path_name)
+            hsi = cv2.cvtColor(bgr, cv2.COLOR_BGR2HSV)
+            print('hsi[2]', hsi[:,:,2])
+            hsi[:,:,2] = new_img
+            # OpenCV stores RGB values inverting R and B channels, i.e. BGR.
+            new_img = cv2.cvtColor(hsi, cv2.COLOR_HSV2BGR)
+        else:
+            self.origin_img_Histo_Label.setPixmap(self.origin_gray_pixmap)
+        ####################################################
+        
+        self.equalized_histo_graph.plotItem.clearPlots()
+        self.equalized_histo_graph.plot(unique_new, count_new, pen='c')
+        # self.equalized_histo_graph.plot(unique2, count2, pen='c')
+        cv2.imwrite('cache/EqualizedImage.jpg', new_img)
+        HistoOutput = QPixmap('cache/EqualizedImage.jpg')
+        # HistoOutput.scaledToHeight(self.equalized_img_Histo_Label.height())
+        # HistoOutput.scaledToWidth(self.equalized_img_Histo_Label.width())
         self.equalized_img_Histo_Label.setPixmap(HistoOutput)
         
         # cv2.imshow("new image",new_img)
         # cv2.waitKey(0)
+
+    def Picking_Image_Spatial(self): 
+        self.image_spatial = self.origin_image_bgr
+        
+        
+        if(self.filter_type == 0):
+            self.blur = cv.GaussianBlur(self.image_spatial,(5,5),cv.BORDER_DEFAULT)
+            
+            cv.imwrite("cache/blur.jpg",self.blur)
+            self.rgb_img = "cache/blur.jpg"
+            
+            self.rgb_img_label.setPixmap(QPixmap(self.rgb_img))
+            self.blur_gray = cv2.cvtColor(self.blur, cv2.COLOR_BGR2GRAY)
+            
+            cv.imwrite("cache/gray_blur.jpg",self.blur_gray)
+            self.gray_img = "cache/gray_blur.jpg"
+            
+            self.gray_img_label.setPixmap(QPixmap(self.gray_img))
+            
+            cv.imwrite("cache/gray_origin.jpg",self.origin_image)
+            self.gray_origin_img = "cache/gray_origin.jpg"
+            
+            self.original_gray_img_label.setPixmap(QPixmap(self.gray_origin_img))
+            
+        elif(self.filter_type == 1):
+            self.edges = self.image_spatial - cv2.GaussianBlur(self.image_spatial, (21, 21), 3)+127 # cv.GaussianBlur(self.image_spatial,(3,3),cv.BORDER_DEFAULT)
+            # self.edges = cv.Canny(self.edge,100,150)
+            
+            cv.imwrite("cache/edges.jpg",self.edges)
+            self.rgb_img = "cache/edges.jpg"
+            
+            self.rgb_img_label.setPixmap(QPixmap(self.rgb_img))
+            self.edge_gray = cv2.cvtColor(self.edges, cv2.COLOR_BGR2GRAY)
+            
+            cv.imwrite("cache/edge_gray.jpg",self.edge_gray)
+            self.gray_img = "cache/edge_gray.jpg"
+            
+            self.gray_img_label.setPixmap(QPixmap(self.gray_img))
+            
+            cv.imwrite("cache/gray_origin.jpg",self.origin_image)
+            self.gray_origin_img = "cache/gray_origin.jpg"
+            
+            self.original_gray_img_label.setPixmap(QPixmap(self.gray_origin_img))
+            
+        elif(self.filter_type == 2):
+            self.blur_2 = cv.medianBlur(self.image_spatial,7)
+            
+            cv.imwrite("cache/blur_2.jpg",self.blur_2)
+            self.rgb_img = "cache/blur_2.jpg"
+            
+            self.rgb_img_label.setPixmap(QPixmap(self.rgb_img))
+            self.blur2_gray = cv2.cvtColor(self.blur_2, cv2.COLOR_BGR2GRAY)
+            
+            cv.imwrite("cache/blur2_gray.jpg",self.blur2_gray)
+            self.gray_img = "cache/blur2_gray.jpg"
+            
+            self.gray_img_label.setPixmap(QPixmap(self.gray_img))
+            
+            cv.imwrite("cache/gray_origin.jpg",self.origin_image)
+            self.gray_origin_img = "cache/gray_origin.jpg"
+            
+            self.original_gray_img_label.setPixmap(QPixmap(self.gray_origin_img))
+
+        elif(self.filter_type == 3):
+            self.kernel2 = np.matrix('-1 -1 -1;-1 8 -1;-1 -1 -1', np.float64)
+            self.Laplacian = cv.filter2D(src=self.image_spatial, ddepth=-1, kernel=self.kernel2)
+            
+            cv.imwrite("cache/Laplaciann.jpg",self.Laplacian)
+            self.rgb_img = "cache/Laplaciann.jpg"
+            
+            self.rgb_img_label.setPixmap(QPixmap(self.rgb_img))
+            self.lap_gray = cv2.cvtColor(self.Laplacian, cv2.COLOR_BGR2GRAY)
+            
+            cv.imwrite("cache/lap_gray.jpg",self.lap_gray)
+            self.gray_img = "cache/lap_gray.jpg"
+            
+            self.gray_img_label.setPixmap(QPixmap(self.gray_img))
+            
+            cv.imwrite("cache/gray_origin.jpg",self.origin_image)
+            self.gray_origin_img = "cache/gray_origin.jpg"
+            
+            self.original_gray_img_label.setPixmap(QPixmap(self.gray_origin_img))
 
     
 def main():
@@ -376,7 +501,9 @@ def main():
             background: #262D37; 
             border: 1px solid lightgray; 
             border-radius: 4px;
-            padding: 5px;
+            padding: 0px;
+            min-width: 90px;
+            min-height: 25px;
             } 
         QTabBar::tab:selected { 
             background: #4d5b70; 
@@ -406,6 +533,13 @@ def main():
             background: #4b596b;
             color: #fff;
             }
+        QMenu{
+            /*border: 1px solid #fff;   
+            min-width: 100px;
+            min-height: 70px;*/
+            background-color: #445060;
+            color: rgb(255,255,255);
+            }
         QMenu::item{
             /* background: #3b444f;
             border: 1px #C6C6C6 solid;
@@ -413,7 +547,7 @@ def main():
             }
         QMenu::item::selected
             {
-            background: #4b596b;
+            background: #5F7289;
             color: #fff;
             }
     """

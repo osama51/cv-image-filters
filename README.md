@@ -49,10 +49,16 @@ First screen is composed of the filters options along with four labels to displa
 
 * Histogram Equalization
 
+ *recently added colors*
 <p align="center"><br>
     <img src="images/samples/sample04.jpg" width="500" height="400"/><br><br>
-    <img src="images/samples/sample04-2.jpg" width="500" height="400"/><br><br>
+    <img src="images/samples/sample04-1.jpg" width="500" height="400"/><br><br>
     <img src="images/samples/sample04-3.jpg" width="500" height="400"/><br>
+</P>
+
+<p align="center"><br>
+    <img src="images/samples/sample04-4.jpg" width="500" height="400"/><br><br>
+    <img src="images/samples/sample04-5.jpg" width="500" height="400"/><br>
 </P>
 
 ## Deeper Insight
