@@ -1,14 +1,5 @@
 # Image Filters
 
-## Contributors
-
-Name | Github
-------|----------
-Filobater George | FilobaterGeorge
-Mariam Boghdady | 
-Mariam Mahmoud | 
-Mohamed Osama | osama51
-
 > *all credit goes to filo, mariam & mariam*
 __________________
 ## Description 
@@ -18,10 +9,6 @@ The app also includes a a histogram equalization tool separated in a second tab.
 ## Samples
 First screen is composed of the filters options along with four labels to display original and filtered images for the top labels, then the original and filtered in frequency domain for the labels below.  
 
-<p align="center"><br>
-    <img src="images/samples/sample00.PNG" width="450" height="400" /><br><br>
-    <img src="images/samples/menu.PNG"/> <br>
-</P>
 
 * Median Filter (spatial domain)
 
@@ -72,5 +59,14 @@ First screen is composed of the filters options along with four labels to displa
 
 ## Issues
 *to-be-added-later*
+
+## Contributors
+
+Name | Github
+------|----------
+Filobater George | FilobaterGeorge
+Mariam Boghdady | 
+Mariam Mahmoud | 
+Mohamed Osama | osama51
 
 ______________
