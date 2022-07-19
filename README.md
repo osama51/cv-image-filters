@@ -2,7 +2,6 @@
 
 > *all credit goes to filo, mariam & mariam*
 __________________
-## Description 
 A simple python application with gui that utilizes various built-from-scratch filters to edit any desired photo and displays the output in gray scale. The filters used are divided into two categories that can be switched between easily using radio buttons; spatial domain and frequency domain filters.
 The app also includes a a histogram equalization tool separated in a second tab. The tool offers 
 
